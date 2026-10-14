@@ -19,21 +19,24 @@ export default function Page() {
   const itemsRef = useRef<Item[]>([]);
   itemsRef.current = items;
 
-  // ----- hapus semua + refresh -----
-  const wipeAll = (message: string, delay: number) => {
+  // ----- hapus semua + refresh (opsional: langsung buka tab tujuan) -----
+  const wipeAll = (message: string, delay: number, goto?: Mode) => {
     if (wiping) return;
     setWiping(true);
     setItems([]); setKey(""); setDkey(""); setInp(""); setShift(3);
     setMsg(message);
-    setTimeout(() => window.location.reload(), delay);
+    setTimeout(() => {
+      window.history.replaceState(null, "", goto ? "#" + goto : window.location.pathname);
+      window.location.reload();
+    }, delay);
   };
-  const guard = () => {
-    if (items.length) { wipeAll("Semua data dihapus.", 300); return true; }
+  const guard = (goto?: Mode) => {
+    if (items.length) { wipeAll("Semua data dihapus.", 300, goto); return true; }
     return false;
   };
 
   const switchMode = (m: Mode) => {
-    if (guard()) return;
+    if (guard(m)) return;
     setMode(m); setMsg("");
   };
 
@@ -76,6 +79,12 @@ export default function Page() {
     if (next.every((x) => x.copied)) wipeAll("Semua sudah disalin. Semua data dihapus.", 900);
     else setMsg("Disalin. Tempel dulu di tempat tujuan, lalu salin yang satunya lagi.");
   };
+
+  // ----- buka tab sesuai #hash setelah refresh -----
+  useEffect(() => {
+    if (window.location.hash === "#dec") setMode("dec");
+    else if (window.location.hash === "#enc") setMode("enc");
+  }, []);
 
   // ----- blokir salin langsung dari kotak hasil -----
   useEffect(() => {
